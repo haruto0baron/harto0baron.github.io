@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>モバイル対応マリオ風ゲーム（改良版）</title>
+<title>モバイル対応マリオ風ゲーム（改良版2）</title>
 <style>
   body { margin:0; overflow:hidden; touch-action:none; }
   canvas { display:block; background:#87CEEB; }
@@ -44,7 +44,6 @@ canvas.height = window.innerHeight;
 
 let score = 0;
 const scoreText = document.getElementById('score');
-
 let scrollX = 0;
 const stageWidth = 2000;
 
@@ -54,22 +53,33 @@ const player = {
   vx:0, vy:0, speed:5, gravity:1, jumpPower:-15, onGround:false
 };
 
-// ステージ
+// ステージブロック
 const blocks = [
   { x:0, y:canvas.height-100, width:300, height:50 },
-  { x:400, y:canvas.height-150, width:200, height:50 },
-  { x:700, y:canvas.height-200, width:200, height:50 },
-  { x:1000, y:canvas.height-150, width:300, height:50 },
+  { x:350, y:canvas.height-150, width:150, height:50 },
+  { x:550, y:canvas.height-220, width:100, height:50 },
+  { x:700, y:canvas.height-180, width:200, height:50 },
+  { x:950, y:canvas.height-250, width:150, height:50 },
+  { x:1150, y:canvas.height-150, width:300, height:50 },
+  { x:1500, y:canvas.height-200, width:200, height:50 },
 ];
+
+// コイン
 const coins = [
-  { x:420, y:canvas.height-190, width:20, height:20, collected:false },
-  { x:740, y:canvas.height-240, width:20, height:20, collected:false },
-  { x:1020, y:canvas.height-190, width:20, height:20, collected:false },
+  { x:370, y:canvas.height-200, width:20, height:20, collected:false },
+  { x:570, y:canvas.height-270, width:20, height:20, collected:false },
+  { x:950, y:canvas.height-300, width:20, height:20, collected:false },
+  { x:1170, y:canvas.height-200, width:20, height:20, collected:false },
 ];
+
+// 敵
 const enemies = [
   { x:600, y:canvas.height-150, width:50, height:50, vx:2 },
   { x:1100, y:canvas.height-200, width:50, height:50, vx:1.5 },
 ];
+
+// ゴール
+const goal = { x:1800, y:canvas.height-250, width:50, height:50 };
 
 // ジョイスティック
 const joystickBase = document.getElementById('joystickBase');
@@ -81,11 +91,10 @@ joystickBase.addEventListener('touchmove', e=>{
   const rect = joystickBase.getBoundingClientRect();
   const touch = e.touches[0];
   let x = touch.clientX - rect.left - rect.width/2;
-  let y = touch.clientY - rect.top - rect.height/2;
-  const distance = Math.sqrt(x*x + y*y);
+  const distance = Math.sqrt(x*x + (touch.clientY - rect.top - rect.height/2)**2);
   const maxDistance = rect.width/2;
-  if(distance>maxDistance){ const ratio=maxDistance/distance; x*=ratio; y*=ratio; }
-  joystickThumb.style.transform = `translate(${x}px,${y}px)`;
+  if(distance>maxDistance){ const ratio=maxDistance/distance; x*=ratio; }
+  joystickThumb.style.transform = `translate(${x}px,0px)`;
   joystickX = x/maxDistance;
 });
 joystickBase.addEventListener('touchend', e=>{ joystickActive=false; joystickX=0; joystickThumb.style.transform='translate(0px,0px)'; });
@@ -106,22 +115,21 @@ function checkCollision(a,b){
     const overlapX=combinedHalfWidth-Math.abs(dx);
     const overlapY=combinedHalfHeight-Math.abs(dy);
     if(overlapX<overlapY){
-      // 横衝突
       if(dx>0) a.x+=overlapX; else a.x-=overlapX;
       a.vx=0;
     } else {
-      // 縦衝突
       if(dy>0){ a.y+=overlapY; a.vy=0; }
       else{ a.y-=overlapY; a.vy=0; a.onGround=true; }
     }
   }
 }
 
-// ゲームオーバー処理（リロードせずリセット）
+// ゲームオーバー処理（リセット）
 function gameOver(){
   player.x=50; player.y=canvas.height-150; player.vx=0; player.vy=0;
   scrollX=0; score=0; scoreText.innerText=`Score: ${score}`;
   for(const coin of coins) coin.collected=false;
+  enemies[0].x=600; enemies[1].x=1100; // 敵位置リセット
 }
 
 // プレイヤー更新
@@ -131,7 +139,6 @@ function updatePlayer(){
   player.vy += player.gravity;
   player.y += player.vy;
 
-  // ブロック衝突
   for(const block of blocks) checkCollision(player,block);
 
   // コイン取得
@@ -142,27 +149,41 @@ function updatePlayer(){
       coin.collected=true; score++; scoreText.innerText=`Score: ${score}`;
     }
   }
-  
+
   // 奈落判定
   if(player.y > canvas.height){
-  gameOver();
+    gameOver();
   }
 }
 
-// 敵更新
+// 敵更新（踏んだら消える）
 function updateEnemies(){
-  for(const enemy of enemies){
+  for(let i=enemies.length-1; i>=0; i--){
+    const enemy = enemies[i];
     enemy.x += enemy.vx;
     if(enemy.x<0 || enemy.x>2000) enemy.vx*=-1;
 
     const ex = enemy.x + scrollX;
     if(player.x+player.width>ex && player.x<ex+enemy.width &&
        player.y+player.height>enemy.y && player.y<enemy.y+enemy.height){
-      if(player.vy>0 && player.y+player.height - player.vy <= enemy.y){
-        // 上から踏む
-        enemy.vx=0; player.vy=player.jumpPower/2;
+
+      if(player.vy>0 && (player.y + player.height - enemy.y) < player.height*0.7){
+        enemies.splice(i,1);
+        player.vy = player.jumpPower/2;
+        score++; scoreText.innerText=`Score: ${score}`;
       } else gameOver();
     }
+  }
+}
+
+// ゴール判定
+function checkGoal(){
+  if(player.x + player.width > goal.x + scrollX &&
+     player.x < goal.x + scrollX + goal.width &&
+     player.y + player.height > goal.y &&
+     player.y < goal.y + goal.height){
+       alert('ゴール！おめでとう！');
+       gameOver();
   }
 }
 
@@ -173,6 +194,7 @@ function draw(){
   ctx.fillStyle='brown'; for(const block of blocks) ctx.fillRect(block.x+scrollX,block.y,block.width,block.height);
   ctx.fillStyle='gold'; for(const coin of coins) if(!coin.collected) ctx.fillRect(coin.x+scrollX,coin.y,coin.width,coin.height);
   ctx.fillStyle='purple'; for(const enemy of enemies) ctx.fillRect(enemy.x+scrollX,enemy.y,enemy.width,enemy.height);
+  ctx.fillStyle='blue'; ctx.fillRect(goal.x+scrollX, goal.y, goal.width, goal.height);
   ctx.fillStyle=player.color; ctx.fillRect(player.x,player.y,player.width,player.height);
 }
 
@@ -180,8 +202,8 @@ function draw(){
 function update(){
   updatePlayer();
   updateEnemies();
+  checkGoal();
 
-  // スクロール調整
   if(player.x>canvas.width/2 && scrollX>-(stageWidth-canvas.width)){ scrollX-=player.vx; player.x=canvas.width/2; }
   else if(player.x<canvas.width/2 && scrollX<0){ scrollX-=player.vx; player.x=canvas.width/2; }
 
