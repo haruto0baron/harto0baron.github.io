@@ -1,50 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ゲーム一覧</title>
+<title>My Game Site</title>
+
 <style>
+
+*{
+box-sizing:border-box;
+}
+
 body{
-font-family:sans-serif;
+margin:0;
+font-family:"Segoe UI",sans-serif;
+background:linear-gradient(180deg,#eaf6ff,#ffffff);
+color:#333;
+}
+
+/* ヘッダー */
+
+header{
 text-align:center;
-background:#222;
-color:white;
+padding:60px 20px;
+background:linear-gradient(135deg,#bfe8ff,#eaf6ff);
 }
 
-.game{
+header h1{
+margin:0;
+font-size:40px;
+}
+
+header p{
+margin-top:10px;
+color:#555;
+}
+
+/* メイン */
+
+main{
+max-width:1000px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* ゲームカード */
+
+.game-list{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:30px;
+}
+
+.game-card{
+background:white;
+width:260px;
+padding:25px;
+border-radius:18px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+transition:transform 0.25s, box-shadow 0.25s;
+}
+
+.game-card:hover{
+transform:translateY(-8px);
+box-shadow:0 15px 35px rgba(0,0,0,0.12);
+}
+
+.game-card h2{
+margin-top:0;
+}
+
+/* ボタン */
+
+.play{
 display:inline-block;
-margin:20px;
-padding:20px;
-background:#444;
+margin-top:15px;
+padding:10px 22px;
 border-radius:10px;
+background:#8fd8ff;
+color:#003344;
+text-decoration:none;
+font-weight:bold;
+transition:background 0.2s;
 }
 
-a{
-color:#00ffff;
-font-size:20px;
-text-decoration:none;
+.play:hover{
+background:#6ecfff;
 }
+
+/* フッター */
+
+footer{
+text-align:center;
+padding:25px;
+margin-top:60px;
+background:#f0f9ff;
+color:#666;
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>🎮 ゲーム一覧</h1>
+<header>
+<h1>My HTML Games</h1>
+<p>ブラウザで遊べる自作ゲーム</p>
+</header>
 
-<div class="game">
-<h2>アクションゲーム</h2>
-<a href="game1/">プレイ</a>
+<main>
+
+<div class="game-list">
+
+<div class="game-card">
+<h2>Game 1</h2>
+<p>TurboWarpで作ったアクションゲーム</p>
+<a class="play" href="game1/index.html">プレイする</a>
 </div>
 
-<div class="game">
-<h2>数字当てゲーム</h2>
-<a href="game2/">プレイ</a>
 </div>
 
-<div class="game">
-<h2>ゲーム3 (作成中)</h2>
-<a href="game3/">プレイ</a>
-</div>
+</main>
+
+<footer>
+© 2026 My Game Site
+</footer>
 
 </body>
 </html>
