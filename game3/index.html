@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タブレットアクションゲーム</title>
+<style>
+  body { margin:0; overflow:hidden; background:#222; }
+  canvas { display:block; touch-action:none; background:#222; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let gravity = 1;
+let keys = {};
+
+let player = {
+    x: 100,
+    y: canvas.height - 150,
+    width: 50,
+    height: 50,
+    color: "#0f0",
+    dy: 0,
+    jumpPower: 20,
+    onGround: true
+};
+
+let obstacles = [];
+let obstacleSpeed = 6;
+let obstacleTypes = [
+    { width: 50, height: 50, color: "#f00", speed: 6 },
+    { width: 30, height: 80, color: "#ff0", speed: 4 },
+    { width: 80, height: 30, color: "#f0f", speed: 8 }
+];
+
+let powerUps = [];
+let score = 0;
+let gameOver = false;
+
+// 障害物生成
+function spawnObstacle() {
+    let type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+    obstacles.push({
+        x: canvas.width,
+        y: canvas.height - type.height - 50,
+        width: type.width,
+        height: type.height,
+        color: type.color,
+        speed: type.speed
+    });
+}
+
+// パワーアップ生成
+function spawnPowerUp() {
+    powerUps.push({
+        x: canvas.width,
+        y: canvas.height - 200,
+        width: 30,
+        height: 30,
+        color: "#0ff",
+        type: "jumpBoost",
+        speed: 5
+    });
+}
+
+// 衝突判定
+function checkCollision(a, b) {
+    return !(
+        a.x > b.x + b.width ||
+        a.x + a.width < b.x ||
+        a.y > b.y + b.height ||
+        a.y + a.height < b.y
+    );
+}
+
+// ゲームループ
+function gameLoop() {
+    if (gameOver) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 横スクロール背景
+    ctx.fillStyle = "#333";
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+    // プレイヤー物理
+    player.dy += gravity;
+    player.y += player.dy;
+    if (player.y + player.height >= canvas.height - 50) {
+        player.y = canvas.height - 50 - player.height;
+        player.dy = 0;
+        player.onGround = true;
+    }
+
+    // プレイヤー描画
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // 障害物更新・描画
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].x -= obstacles[i].speed;
+        ctx.fillStyle = obstacles[i].color;
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+
+        if (checkCollision(player, obstacles[i])) {
+            gameOver = true;
+            alert("ゲームオーバー! スコア: " + score);
+            document.location.reload();
+        }
+
+        if (obstacles[i].x + obstacles[i].width < 0) {
+            obstacles.splice(i, 1);
+            score++;
+        }
+    }
+
+    // パワーアップ更新・描画
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+        powerUps[i].x -= powerUps[i].speed;
+        ctx.fillStyle = powerUps[i].color;
+        ctx.fillRect(powerUps[i].x, powerUps[i].y, powerUps[i].width, powerUps[i].height);
+
+        if (checkCollision(player, powerUps[i])) {
+            player.jumpPower += 10;
+            powerUps.splice(i, 1);
+        }
+
+        if (powerUps[i] && powerUps[i].x + powerUps[i].width < 0) {
+            powerUps.splice(i, 1);
+        }
+    }
+
+    // スコア描画
+    ctx.fillStyle = "#fff";
+    ctx.font = "30px Arial";
+    ctx.fillText("スコア: " + score, 20, 40);
+
+    requestAnimationFrame(gameLoop);
+}
+
+// ジャンプ操作
+function jump() {
+    if (player.onGround) {
+        player.dy = -player.jumpPower;
+        player.onGround = false;
+    }
+}
+
+// タッチ操作でジャンプ
+canvas.addEventListener("touchstart", jump);
+
+// 障害物・パワーアップ定期生成
+setInterval(spawnObstacle, 1500);
+setInterval(spawnPowerUp, 7000);
+
+// ゲーム開始
+gameLoop();
+</script>
+</body>
+</html>
