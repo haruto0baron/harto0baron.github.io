@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>タブレットアクションゲーム</title>
+<title>アクションゲーム</title>
 <style>
   body { margin:0; overflow:hidden; background:#222; }
   canvas { display:block; touch-action:none; background:#222; }
@@ -96,6 +96,8 @@ function gameLoop() {
         player.y = canvas.height - 50 - player.height;
         player.dy = 0;
         player.onGround = true;
+　　     score++;
+
     }
 
     // プレイヤー描画
@@ -116,7 +118,6 @@ function gameLoop() {
 
         if (obstacles[i].x + obstacles[i].width < 0) {
             obstacles.splice(i, 1);
-            score++;
         }
     }
 
