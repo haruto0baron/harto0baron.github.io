@@ -1,1 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>数字当てゲーム</title>
+</head>
 
+<body style="text-align:center">
+
+<h1>数字当てゲーム</h1>
+
+<p>1〜10の数字を当ててください</p>
+
+<input id="guess">
+<button onclick="check()">決定</button>
+
+<p id="result"></p>
+
+<script>
+let answer = Math.floor(Math.random()*10)+1;
+
+function check(){
+let g = document.getElementById("guess").value;
+
+if(g == answer){
+document.getElementById("result").textContent="正解！";
+}else{
+document.getElementById("result").textContent="違う！";
+}
+}
+</script>
+
+<br><br>
+<a href="../">←戻る</a>
+
+</body>
+</html>
